@@ -20,7 +20,7 @@
     <component
       :is="chartComponent"
       v-else
-      :data="chartData"
+      :data="data"
       :options="mergedOptions"
     />
   </div>

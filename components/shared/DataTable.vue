@@ -8,9 +8,9 @@
           <input
             type="text"
             v-model="searchQuery"
-            placeholder="Search..."
+            placeholder="Search transactions..."
             class="block w-full rounded-md border border-gray-300 dark:border-gray-700 
-                   bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                   bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-700 dark:text-gray-300"
           />
         </div>
 
@@ -27,19 +27,16 @@
         <thead class="bg-gray-50 dark:bg-gray-900">
           <tr>
             <th
-              v-for="column in columns"
+              v-for="column in transactionColumns"
               :key="column.key"
               scope="col"
-              :class="[
-                'px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider',
-                column.class
-              ]"
+              class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
             >
               <div class="flex items-center gap-1">
                 {{ column.label }}
                 <button
                   v-if="column.sortable"
-                  @click="toggleSort(column.key)"
+                  @click="toggleSort(column.key as keyof ClientTransaction)"
                   class="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
                 >
                   <Icon
@@ -54,33 +51,39 @@
             </th>
           </tr>
         </thead>
-        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 dark:text-white">
           <tr
-            v-for="(item, index) in paginatedData"
-            :key="item.id || index"
+            v-for="transaction in paginatedData"
+            :key="transaction.requestId"
             class="hover:bg-gray-50 dark:hover:bg-gray-700"
           >
-            <td
-              v-for="column in columns"
-              :key="column.key"
-              :class="[
-                'px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white',
-                column.class
-              ]"
-            >
-              <slot
-                :name="`cell-${column.key}`"
-                :item="item"
-                :value="item[column.key]"
-              >
-                {{ item[column.key] }}
-              </slot>
+            <td class="px-6 py-4 whitespace-nowrap">
+              {{ new Date(transaction.timestamp * 1000).toLocaleDateString() }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <TransactionCategoryBadge :category="transaction.category" />
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <TransactionAmountDisplay 
+                :amount="transaction.amount"
+                :currency="transaction.currency"
+                :category="transaction.category"
+              />
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <TransactionStatusBadge :status="transaction.status" />
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              {{ truncateAddress(transaction.from) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              {{ truncateAddress(transaction.to) }}
             </td>
             <td
               v-if="$slots.rowActions"
               class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
             >
-              <slot name="rowActions" :item="item" />
+              <slot name="rowActions" :item="transaction" />
             </td>
           </tr>
         </tbody>
@@ -144,24 +147,26 @@
 </template>
 
 <script setup lang="ts">
-interface Column {
-  key: string;
-  label: string;
-  sortable?: boolean;
-  class?: string;
-}
+
+const transactionColumns = [
+  { key: 'timestamp', label: 'Date', sortable: true },
+  { key: 'category', label: 'Category', sortable: true },
+  { key: 'amount', label: 'Amount', sortable: true },
+  { key: 'status', label: 'Status', sortable: true },
+  { key: 'from', label: 'From', sortable: true },
+  { key: 'to', label: 'To', sortable: true }
+] as const;
 
 const props = defineProps<{
-  columns: Column[];
-  data: any[];
-  itemsPerPage?: number;
+  data: ClientTransaction[];
 }>();
 
 // State
 const searchQuery = ref('');
 const currentPage = ref(1);
-const sortKey = ref('');
-const sortDirection = ref<'asc' | 'desc'>('asc');
+const sortKey = ref<keyof ClientTransaction>('timestamp');
+const sortDirection = ref<'asc' | 'desc'>('desc');
+const itemsPerPage = ref(10);
 
 // Computed
 const filteredData = computed(() => {
@@ -170,10 +175,12 @@ const filteredData = computed(() => {
   // Search
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
-    result = result.filter(item => 
-      props.columns.some(column => 
-        String(item[column.key]).toLowerCase().includes(query)
-      )
+    result = result.filter(transaction => 
+      transaction.requestId.toLowerCase().includes(query) ||
+      transaction.from.toLowerCase().includes(query) ||
+      transaction.to.toLowerCase().includes(query) ||
+      transaction.category.toLowerCase().includes(query) ||
+      transaction.status.toLowerCase().includes(query)
     );
   }
   
@@ -194,21 +201,21 @@ const filteredData = computed(() => {
 });
 
 const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * (props.itemsPerPage || 10);
-  const end = start + (props.itemsPerPage || 10);
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
   return filteredData.value.slice(start, end);
 });
 
 const totalPages = computed(() => 
-  Math.ceil(filteredData.value.length / (props.itemsPerPage || 10))
+  Math.ceil(filteredData.value.length / itemsPerPage.value)
 );
 
 const startIndex = computed(() => 
-  (currentPage.value - 1) * (props.itemsPerPage || 10)
+  (currentPage.value - 1) * itemsPerPage.value
 );
 
 const endIndex = computed(() => 
-  Math.min(startIndex.value + (props.itemsPerPage || 10), filteredData.value.length)
+  Math.min(startIndex.value + itemsPerPage.value, filteredData.value.length)
 );
 
 const displayedPages = computed(() => {
@@ -236,12 +243,12 @@ const displayedPages = computed(() => {
 });
 
 // Methods
-const toggleSort = (key: string) => {
+const toggleSort = (key: keyof ClientTransaction) => {
   if (sortKey.value === key) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc';
   } else {
     sortKey.value = key;
-    sortDirection.value = 'asc';
+    sortDirection.value = 'desc';
   }
 };
 

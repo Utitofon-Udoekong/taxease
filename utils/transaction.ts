@@ -1,28 +1,39 @@
-import { Types } from "@requestnetwork/request-client.js";
 
 export type TransactionCategory = 'income' | 'expense' | 'investment' | 'uncategorized';
-export type TransactionStatus = 'pending' | 'accepted' | 'canceled' | 'rejected';
+export type TransactionStatus = 'pending' | 'accepted' | 'canceled' | 'created';
 
-export interface Transaction {
+export interface ClientTransaction {
     requestId: string;
     transactionHash?: string;
     timestamp: number;
     amount: string;
     currency: string;
     status: TransactionStatus;
+    nonce: number;
+    creator: string;
     category: TransactionCategory;
     from: string;
     to: string;
-    metadata?: {
-        reason?: string;
-        dueDate?: Date;
-        tags?: string[];
-        notes?: string;
-    };
-    taxYear: number;
+    contentData?: any;
+    taxYear?: number;
     taxableAmount?: string;
     deductible?: boolean;
     taxCategory?: string;
+}
+
+export interface ServerResponseTransaction {
+    requestId: string;
+    transactionHash?: string;
+    timestamp: number;
+    amount: string;
+    currency: string;
+    status: TransactionStatus;
+    from: string;
+    to: string;
+    nonce: number;
+    contentData?: any;
+    taxYear?: number;
+    creator?: string;
 }
 
 export interface TaxSummary {
@@ -41,45 +52,46 @@ export interface TaxSummary {
 }
 
 // Helper function to convert Request Network transaction to our format
-export function normalizeTransaction(rawTx: any): Transaction {
+export function normalizeTransaction(serverTx: any): ClientTransaction {
     return {
-        requestId: rawTx.requestId || '',
-        transactionHash: rawTx.meta?.transactionManagerMeta?.dataAccessMeta?.storageMeta?.[0]?.ethereum?.transactionHash,
-        timestamp: rawTx.timestamp || Date.now(),
-        amount: rawTx.expectedAmount || '0',
-        currency: rawTx.currency || 'ETH',
-        status: mapRequestStatus(rawTx.state),
-        category: determineCategory(rawTx),
-        from: rawTx.payer?.value || '',
-        to: rawTx.payee?.value || '',
-        metadata: {
-            reason: rawTx.contentData?.values?.content?.reason,
-            dueDate: rawTx.contentData?.values?.content?.dueDate,
-            tags: [],
-            notes: ''
-        },
-        taxYear: new Date(rawTx.timestamp * 1000).getFullYear(),
+        requestId: serverTx.requestId || '',
+        transactionHash: serverTx.transactionHash,
+        timestamp: serverTx.timestamp || Date.now(),
+        amount: serverTx.amount,
+        currency: serverTx.currency || 'ETH',
+        status: mapRequestStatus(serverTx.status),
+        category: determineCategory(serverTx.to),
+        from: serverTx.from || '',
+        to: serverTx.to || '',
+        contentData: serverTx.contentData,
+        nonce: serverTx.nonce || 0,
+        creator: serverTx.creator || '',
+        taxYear: serverTx.taxYear,
         deductible: false
     };
 }
 
-function mapRequestStatus(status: string): TransactionStatus {
+export function mapRequestStatus(status: string): TransactionStatus {
     switch (status) {
         case 'PENDING': return 'pending';
         case 'ACCEPTED': return 'accepted';
         case 'CANCELED': return 'canceled';
-        case 'REJECTED': return 'rejected';
+        case 'CREATED': return 'created';
         default: return 'pending';
     }
 }
 
-function determineCategory(tx: any): TransactionCategory {
-    // Basic category determination logic
-    if (tx.contentData?.values?.content?.reason?.toLowerCase().includes('income')) {
-        return 'income';
+export function determineCategory(to: string): TransactionCategory {
+    if (!to) {
+        return 'uncategorized';
     }
-    if (tx.contentData?.values?.content?.reason?.toLowerCase().includes('investment')) {
-        return 'investment';
+    const walletStore = useWalletStore();
+    if (to === walletStore.address?.toLowerCase()) {
+      return 'income';
     }
-    return tx.expectedAmount?.startsWith('-') ? 'expense' : 'income';
+    return 'expense';
 } 
+
+export function truncateAddress(address: string): string {
+    return address.slice(0, 6) + '...' + address.slice(-4);
+}

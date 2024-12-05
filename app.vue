@@ -1,8 +1,13 @@
 <template>
-  <NuxtLayout name="dashboard">
+  <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
 </template>
 <script setup>
-console.log(globalThis.Buffer);
+const transactionStore = useTransactionStore();
+const { fetchTransactions } = transactionStore;
+
+onMounted(async () => {
+  await fetchTransactions();
+});
 </script>

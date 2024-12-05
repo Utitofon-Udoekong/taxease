@@ -1,12 +1,19 @@
 <template>
   <div class="space-y-6">
+    <!-- Header with Refresh -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h2>
+      <button @click="fetchData" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md
+               text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" :disabled="loading">
+        <Icon name="heroicons:arrow-path" class="w-5 h-5" :class="{ 'animate-spin': loading }" />
+        Refresh
+      </button>
+    </div>
+
+    <LoadingOverlay v-if="loading" message="Fetching transactions..." />
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <ReportSummaryCard
-        v-for="stat in quickStats"
-        :key="stat.title"
-        v-bind="stat"
-      />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <ReportSummaryCard v-for="stat in quickStats" :key="stat.title" v-bind="stat" />
     </div>
 
     <!-- Recent Activity -->
@@ -17,11 +24,7 @@
           <h3 class="text-lg font-medium text-gray-900 dark:text-white">Recent Transactions</h3>
         </div>
         <div class="divide-y divide-gray-200 dark:divide-gray-700">
-          <div
-            v-for="tx in recentTransactions"
-            :key="tx.requestId"
-            class="p-4"
-          >
+          <div v-for="tx in recentTransactions" :key="tx.requestId" class="p-4">
             <div class="flex items-center justify-between">
               <div>
                 <TransactionCategoryBadge :category="tx.category" />
@@ -29,10 +32,7 @@
                   {{ new Date(tx.timestamp * 1000).toLocaleDateString() }}
                 </div>
               </div>
-              <TransactionAmountDisplay
-                :amount="tx.amount"
-                :currency="tx.currency"
-              />
+              <TransactionAmountDisplay :amount="tx.amount" :currency="tx.currency" :category="tx.category" />
             </div>
           </div>
         </div>
@@ -41,108 +41,72 @@
       <!-- Monthly Overview -->
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
         <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Monthly Overview</h3>
-        <TrendChart
-          title="Income vs Expenses"
-          :data="monthlyData"
-        />
+        <TrendChart title="Income vs Expenses" :data="monthlyData" />
       </div>
     </div>
 
-    <!-- Category Distribution -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-      <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Category Distribution</h3>
-      <DistributionChart
-        title="Expenses by Category"
-        :data="categoryData"
-      />
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useStandardTaxCalculator } from '@/composables/useStandardTaxCalculator';
-import { useRequestNetwork } from '@/composables/useRequestNetwork';
-import type { Transaction } from '@/utils/transaction';
 
-definePageMeta({
-  layout: 'dashboard'
-});
+const transactionStore = useTransactionStore();
+const { transactions, loading } = storeToRefs(transactionStore);
 
-const { fetchTransaction } = useRequestNetwork();
 const { calculateTaxSummary, generateStandardReport } = useStandardTaxCalculator();
 
-// Fetch data
-const transactions = ref<Transaction[]>([]);
-const loading = ref(true);
-
-onMounted(async () => {
-  try {
-    const data = await fetchTransaction();
-    transactions.value = data as Transaction[];
-  } catch (error) {
-    console.error('Error fetching transactions:', error);
-  } finally {
-    loading.value = false;
-  }
-});
+const fetchData = async () => {
+  await transactionStore.fetchTransactions();
+};
 
 // Chart data computations
 const monthlyData = computed(() => {
   const report = generateStandardReport();
-  return {
-    labels: report.monthlyTotals.map(m => `${m.month}/${report.periodStart.getFullYear()}`),
-    values: report.monthlyTotals.map(m => Number(m.net))
-  };
-});
+  if (!report?.monthlyTotals) return { labels: [], values: [] };
 
-const categoryData = computed(() => {
-  const report = generateStandardReport();
-  return Object.entries(report.categoryTotals).map(([label, value]) => ({
-    label,
-    value: Number(value)
-  }));
+  return {
+    labels: report.monthlyTotals.map(m => `${m.month}/${report.periodStart?.getFullYear() || new Date().getFullYear()}`),
+    values: report.monthlyTotals.map(m => Number(m.net || 0))
+  };
 });
 
 // Computed stats and data
 const quickStats = computed(() => {
-  const summary = calculateTaxSummary(new Date().getFullYear());
+  const summary = calculateTaxSummary(new Date().getFullYear()) || {
+    totalIncome: '0',
+    totalExpenses: '0',
+    netIncome: '0'
+  };
+
   return [
     {
       title: 'Total Income',
       subtitle: 'Current Period',
       mainValue: summary.totalIncome,
-      trendValue: '+12.5%',
-      trendDirection: 'up' as const,
       icon: 'heroicons:banknotes'
     },
     {
       title: 'Total Expenses',
       subtitle: 'Current Period',
       mainValue: summary.totalExpenses,
-      trendValue: '-5.2%',
-      trendDirection: 'down' as const,
       icon: 'heroicons:credit-card'
     },
     {
       title: 'Net Income',
       subtitle: 'Current Period',
       mainValue: summary.netIncome,
-      trendValue: '+8.3%',
-      trendDirection: 'up' as const,
       icon: 'heroicons:calculator'
     },
     {
       title: 'Pending Transactions',
       subtitle: 'Awaiting Confirmation',
       mainValue: String(transactions.value.filter(tx => tx.status === 'pending').length),
-      trendValue: '0%',
-      trendDirection: 'neutral' as const,
       icon: 'heroicons:clock'
     }
   ];
 });
 
-const recentTransactions = computed(() => 
-  transactions.value.slice(0, 5)
+const recentTransactions = computed(() =>
+  (transactions.value || []).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5)
 );
-</script> 
+</script>

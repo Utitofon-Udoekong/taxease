@@ -24,6 +24,7 @@
     "@vueuse/nuxt": "12.0.0",
     "@wagmi/vue": "^0.0.68",
     "chart.js": "^4.4.7",
+    "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "nuxt": "^3.14.1592",
     "nuxt-headlessui": "1.2.0",

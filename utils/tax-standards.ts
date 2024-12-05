@@ -53,7 +53,7 @@ export interface StandardTaxReport {
         netIncome: string;
         totalDeductible: string;
     };
-    transactions: StandardTaxTransaction[];
+    transactions: ClientTransaction[];
     categoryTotals: Record<string, string>;
     monthlyTotals: Array<{
         month: number;
@@ -63,16 +63,3 @@ export interface StandardTaxReport {
         net: string;
     }>;
 }
-
-export interface StandardTaxTransaction {
-    date: Date;
-    transactionId: string;
-    category: string;
-    description: string;
-    amount: string;
-    currency: string;
-    isDeductible: boolean;
-    payerAddress: string;
-    payeeAddress: string;
-    status: string;
-} 

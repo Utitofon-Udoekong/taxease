@@ -1,5 +1,9 @@
 <template>
   <div class="space-y-6">
+    <LoadingOverlay
+      v-if="loading"
+      message="Fetching transactions..."
+    />
     <!-- Report Generation Form -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Generate Tax Report</h3>
@@ -91,10 +95,6 @@
 
 <script setup lang="ts">
 
-definePageMeta({
-  layout: 'dashboard'
-});
-
 // State
 const reportConfig = ref({
   startDate: new Date(new Date().getFullYear(), 0, 1),
@@ -102,7 +102,20 @@ const reportConfig = ref({
   format: 'csv'
 });
 
-const loading = ref(true);
+// Data fetching
+const { transactions, loading } = storeToRefs(useTransactionStore());
+
+// onMounted(async () => {
+//   try {
+//     const data = await fetchTransaction();
+//     console.log(data);
+//     transactions.value = data as ClientTransaction[];
+//   } catch (error) {
+//     console.error('Error fetching transactions:', error);
+//   } finally {
+//     loading.value = false;
+//   }
+// });
 
 // Table configuration
 const columns = [
@@ -132,8 +145,8 @@ const categoryChartData = computed(() =>
 
 const filteredTransactions = computed(() => 
   report.value.transactions.filter(tx => 
-    new Date(tx.date).getTime() >= reportConfig.value.startDate.getTime() &&
-    new Date(tx.date).getTime() <= reportConfig.value.endDate.getTime()
+    new Date(tx.timestamp).getTime() >= reportConfig.value.startDate.getTime() &&
+    new Date(tx.timestamp).getTime() <= reportConfig.value.endDate.getTime()
   )
 );
 

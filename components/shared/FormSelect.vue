@@ -10,8 +10,7 @@
     </label>
     <select
       :id="id"
-      :value="modelValue"
-      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
+      v-model="model"
       :required="required"
       :disabled="disabled"
       :class="[
@@ -55,7 +54,6 @@ interface Option {
 }
 
 interface Props {
-  modelValue: string | number;
   options: Option[];
   label?: string;
   placeholder?: string;
@@ -66,11 +64,9 @@ interface Props {
   id?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  id: () => `select-${Math.random().toString(36).substr(2, 9)}`
+withDefaults(defineProps<Props>(), {
+  id: () => `select-${Math.random().toString(36).substring(2, 9)}`
 });
 
-defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-}>();
+const model = defineModel<string | number>();
 </script> 

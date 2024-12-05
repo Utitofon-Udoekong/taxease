@@ -16,6 +16,7 @@ interface Props {
   amount: string;
   currency?: string;
   showSign?: boolean;
+  category?: TransactionCategory;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,14 +28,14 @@ const formattedAmount = computed(() => {
   const value = formatUnits(BigInt(props.amount), 18);
   const numValue = parseFloat(value);
   const formatted = Math.abs(numValue).toFixed(4);
-  const sign = props.showSign && numValue > 0 ? '+' : '';
+  const sign = props.showSign && numValue > 0 && props.category !== 'expense' ? '+' : '';
   return `${sign}${formatted} ${props.currency}`;
 });
 
 const amountClass = computed(() => {
-  const value = parseFloat(formatUnits(BigInt(props.amount), 18));
-  if (value > 0) return 'text-green-600 dark:text-green-400';
-  if (value < 0) return 'text-red-600 dark:text-red-400';
+  // const value = parseFloat(formatUnits(BigInt(props.amount), 18));
+  if (props.category === 'income') return 'text-green-600 dark:text-green-400';
+  if (props.category === 'expense') return 'text-red-600 dark:text-red-400';
   return 'text-gray-600 dark:text-gray-400';
 });
 </script> 

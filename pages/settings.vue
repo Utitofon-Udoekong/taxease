@@ -1,5 +1,6 @@
 <template>
   <div class="space-y-6">
+    
     <!-- Profile Settings -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
       <div class="p-6 border-b border-gray-200 dark:border-gray-700">
@@ -50,19 +51,19 @@
               </div>
               <div class="ml-4">
                 <div class="text-sm font-medium text-gray-900 dark:text-white">
-                  {{ truncateAddress(connectedAddress) }}
+                  {{ truncateAddress(connectedAddress ?? '') }}
                 </div>
                 <div class="text-sm text-gray-500">
                   Primary Wallet
                 </div>
               </div>
             </div>
-            <button
+            <!-- <button
               @click="disconnect"
               class="text-sm text-red-600 hover:text-red-900 dark:hover:text-red-400"
             >
               Disconnect
-            </button>
+            </button> -->
           </div>
 
           <!-- Connect New Wallet -->
@@ -99,13 +100,7 @@
 </template>
 
 <script setup lang="ts">
-import { useWalletStore } from '@/stores/wallet';
-import { useDisconnect } from 'wagmi';
-
-definePageMeta({
-  layout: 'dashboard'
-});
-
+// import { useDisconnect } from '@wagmi/core';
 // Profile settings
 const profileSettings = ref({
   name: '',
@@ -128,7 +123,7 @@ const apiKeys = ref([]);
 
 // Wallet connection
 const wallet = useWalletStore();
-const { disconnect } = useDisconnect();
+// const { disconnect } = useDisconnect();
 
 const connectedAddress = computed(() => wallet.address);
 

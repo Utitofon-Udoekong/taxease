@@ -1,30 +1,22 @@
 <template>
   <div class="space-y-6">
+    <LoadingOverlay
+      v-if="loading"
+      message="Fetching transactions..."
+    />
+    <!-- Header with Refresh -->
+    <div class="flex justify-between items-center">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h2>
+      <button @click="fetchData" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md
+               text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" :disabled="loading">
+        <Icon name="heroicons:arrow-path" class="w-5 h-5" :class="{ 'animate-spin': loading }" />
+        Refresh
+      </button>
+    </div>
     <DataTable
-      :columns="columns"
       :data="transactions"
       :loading="loading"
     >
-      <!-- Custom cell renderers -->
-      <template #cell-date="{ value }">
-        {{ new Date(value * 1000).toLocaleDateString() }}
-      </template>
-
-      <template #cell-category="{ value }">
-        <TransactionCategoryBadge :category="value" />
-      </template>
-
-      <template #cell-status="{ value }">
-        <TransactionStatusBadge :status="value" />
-      </template>
-
-      <template #cell-amount="{ item }">
-        <TransactionAmountDisplay
-          :amount="item.amount"
-          :currency="item.currency"
-        />
-      </template>
-
       <!-- Actions slot -->
       <template #actions>
         <button
@@ -63,7 +55,7 @@
             <FormSelect
               v-model="selectedTransaction.category"
               :options="categoryOptions"
-              class="mt-1"
+              class="mt-1 text-gray-700 dark:text-gray-300"
             />
           </div>
           <div>
@@ -71,8 +63,9 @@
               Notes
             </label>
             <FormTextArea
-              v-model="selectedTransaction?.metadata?.notes"
-              class="mt-1"
+              v-if="selectedTransaction"
+              v-model="notes"
+              class="mt-1 text-gray-700 dark:text-gray-300"
             />
           </div>
           <div>
@@ -111,19 +104,6 @@
 
 <script setup lang="ts">
 
-definePageMeta({
-  layout: 'dashboard'
-});
-
-const { generateStandardReport } = useStandardTaxCalculator();
-
-// Table configuration
-const columns = [
-  { key: 'date', label: 'Date', sortable: true },
-  { key: 'category', label: 'Category', sortable: true },
-  { key: 'amount', label: 'Amount', sortable: true },
-  { key: 'status', label: 'Status', sortable: true }
-];
 
 // Category options for select
 const categoryOptions = [
@@ -134,31 +114,24 @@ const categoryOptions = [
 ];
 
 // Data fetching
-const { fetchTransaction } = useRequestNetwork();
-const transactions = ref<Transaction[]>([]);
-const loading = ref(true);
-const selectedTransaction = ref<Transaction | null>(null);
+const transactionStore = useTransactionStore();
+const { transactions, loading } = storeToRefs(transactionStore);
+const selectedTransaction = ref<ClientTransaction | null>(null);
 
-onMounted(async () => {
-  try {
-    const data = await fetchTransaction();
-    transactions.value = data as Transaction[];
-  } catch (error) {
-    console.error('Error fetching transactions:', error);
-  } finally {
-    loading.value = false;
-  }
-});
-
+const { generateStandardReport } = useStandardTaxCalculator();
 // Actions
-const openTransactionDetails = (transaction: Transaction) => {
+const openTransactionDetails = (transaction: ClientTransaction) => {
   selectedTransaction.value = {
     ...transaction,
-    metadata: {
-      ...transaction.metadata,
-      notes: transaction.metadata?.notes || ''
+    contentData: {
+      ...transaction.contentData,
+      notes: transaction.contentData?.notes || ''
     }
   };
+};
+
+const fetchData = async () => {
+  await transactionStore.fetchTransactions();
 };
 
 const saveTransaction = () => {
@@ -171,9 +144,9 @@ const saveTransaction = () => {
   if (index !== -1) {
     transactions.value[index] = {
       ...selectedTransaction.value,
-      metadata: {
-        ...selectedTransaction.value.metadata,
-        notes: selectedTransaction.value.metadata?.notes || ''
+      contentData: {
+        ...selectedTransaction.value.contentData,
+        notes: selectedTransaction.value.contentData?.notes || ''
       }
     };
   }
@@ -231,4 +204,25 @@ const downloadFile = (data: string | Blob, filename: string, format: string) => 
   document.body.removeChild(link);
   window.URL.revokeObjectURL(url);
 };
+
+// Create a ref for notes
+const notes = ref('');
+
+// Update notes when transaction changes
+watch(selectedTransaction, (transaction) => {
+  notes.value = transaction?.contentData?.notes || '';
+}, { immediate: true });
+
+// Update transaction when notes change
+watch(notes, (value) => {
+  if (selectedTransaction.value) {
+    selectedTransaction.value = {
+      ...selectedTransaction.value,
+      contentData: {
+        ...selectedTransaction.value.contentData,
+        notes: value
+      }
+    };
+  }
+});
 </script> 

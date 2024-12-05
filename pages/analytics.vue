@@ -1,5 +1,9 @@
 <template>
   <div class="space-y-6">
+    <LoadingOverlay
+      v-if="loading"
+      message="Fetching transactions..."
+    />
     <!-- Time Period and Filters -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <div class="flex flex-col sm:flex-row justify-between gap-4">
@@ -116,13 +120,7 @@
 </template>
 
 <script setup lang="ts">
-import { useStandardTaxCalculator } from '@/composables/useStandardTaxCalculator';
-import { useRequestNetwork } from '@/composables/useRequestNetwork';
-import type { Transaction } from '@/utils/transaction';
 
-definePageMeta({
-  layout: 'dashboard'
-});
 
 // State
 const dateRange = ref({
@@ -130,25 +128,15 @@ const dateRange = ref({
   end: new Date()
 });
 
-const loading = ref(true);
-const transactions = ref<Transaction[]>([]);
 
 // Data fetching
-const { fetchTransaction } = useRequestNetwork();
+const transactionStore = useTransactionStore();
+const { transactions, loading } = storeToRefs(transactionStore);
 const { generateStandardReport } = useStandardTaxCalculator();
 
-onMounted(refreshData);
 
 async function refreshData() {
-  loading.value = true;
-  try {
-    const data = await fetchTransaction();
-    transactions.value = data as Transaction[];
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  } finally {
-    loading.value = false;
-  }
+  await transactionStore.fetchTransactions();
 }
 
 // Computed metrics

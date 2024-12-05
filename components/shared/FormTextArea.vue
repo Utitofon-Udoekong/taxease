@@ -10,8 +10,7 @@
     </label>
     <textarea
       :id="id"
-      :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+      v-model="model"
       :placeholder="placeholder"
       :required="required"
       :disabled="disabled"
@@ -41,7 +40,6 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue?: string;
   label?: string;
   placeholder?: string;
   required?: boolean;
@@ -53,11 +51,9 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  id: () => `textarea-${Math.random().toString(36).substr(2, 9)}`,
+  id: () => `textarea-${Math.random().toString(36).substring(2, 9)}`,
   rows: 4
 });
 
-defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-}>();
+const model = defineModel<string>();
 </script> 

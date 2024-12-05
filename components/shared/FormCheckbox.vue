@@ -4,8 +4,7 @@
       <input
         :id="id"
         type="checkbox"
-        :checked="modelValue"
-        @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
+        v-model="model"
         :required="required"
         :disabled="disabled"
         class="h-4 w-4 rounded border-gray-300 dark:border-gray-700 text-indigo-600 focus:ring-indigo-500"
@@ -43,7 +42,6 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue?: boolean;
   label: string;
   description?: string;
   required?: boolean;
@@ -56,7 +54,5 @@ withDefaults(defineProps<Props>(), {
   id: () => `checkbox-${Math.random().toString(36).substring(2, 9)}`
 });
 
-defineEmits<{
-  (e: 'update:modelValue', value: boolean): void;
-}>();
+const model = defineModel<boolean>();
 </script> 

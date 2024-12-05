@@ -6,7 +6,7 @@ import type { AppKit } from '@reown/appkit/vue';
 
 export const useWalletStore = defineStore('wallet', () => {
   // State
-  const address = ref<Address | null>(null);
+  const address = ref<Address | null>('0x519145B771a6e450461af89980e5C17Ff6Fd8A92');
   const chainId = ref<number | null>(null);
   const isConnected = ref(false);
   const balance = ref<bigint>(BigInt(0));

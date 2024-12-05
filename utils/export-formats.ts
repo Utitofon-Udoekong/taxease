@@ -24,16 +24,15 @@ const generateCSV = (data: StandardTaxReport): string => {
         'Status'
     ];
 
-    const rows = data.transactions.map(tx => [
-        tx.date.toISOString().split('T')[0],
-        tx.transactionId,
+    const rows = data.transactions.map((tx: ClientTransaction) => [
+        new Date(tx.timestamp).toISOString().split('T')[0],
+        tx.requestId,
         tx.category,
-        `"${tx.description}"`,
         tx.amount,
         tx.currency,
-        tx.isDeductible ? 'Yes' : 'No',
-        tx.payerAddress,
-        tx.payeeAddress,
+        tx.deductible ? 'Yes' : 'No',
+        tx.from,
+        tx.to,
         tx.status
     ]);
 
@@ -45,15 +44,14 @@ const generateExcel = (data: StandardTaxReport): Blob => {
 
     // Transactions sheet
     const transactionRows = data.transactions.map(tx => ({
-        Date: tx.date.toISOString().split('T')[0],
-        'Transaction ID': tx.transactionId,
+        Date: new Date(tx.timestamp).toISOString().split('T')[0],
+        'Transaction ID': tx.requestId,
         Category: tx.category,
-        Description: tx.description,
         Amount: tx.amount,
         Currency: tx.currency,
-        Deductible: tx.isDeductible ? 'Yes' : 'No',
-        'Payer Address': tx.payerAddress,
-        'Payee Address': tx.payeeAddress,
+        Deductible: tx.deductible ? 'Yes' : 'No',
+        'Payer Address': tx.from,
+        'Payee Address': tx.to,
         Status: tx.status
     }));
 
@@ -108,10 +106,10 @@ const generatePDF = (data: StandardTaxReport): Blob => {
     autoTable(doc, {
         head: [['Date', 'Category', 'Amount', 'Deductible', 'Status']],
         body: data.transactions.map(tx => [
-            tx.date.toLocaleDateString(),
+            new Date(tx.timestamp).toLocaleDateString(),
             tx.category,
             `${tx.amount} ${tx.currency}`,
-            tx.isDeductible ? 'Yes' : 'No',
+            tx.deductible ? 'Yes' : 'No',
             tx.status
         ]),
         startY: (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10
