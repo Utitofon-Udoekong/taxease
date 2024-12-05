@@ -12,13 +12,19 @@ export default defineNuxtConfig({
     '@nuxtjs/color-mode',
     '@vueuse/nuxt',
     'nuxt-headlessui',
-    '@nuxt/icon'
+    '@nuxt/icon',
   ],
   runtimeConfig: {
     public: {
       walletConnectProjectId: process.env.NUXT_PUBLIC_WALLET_CONNECT_PROJECT_ID
     }
   },
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false,
+    },
+  ],
   pinia: {
     storesDirs: ['./stores/**'],
   },

@@ -12,8 +12,8 @@ export default defineEventHandler(async (event) => {
             type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
             value: identityAddress,
         });
-        console.log(requestData)
-        return requestData;
+        const requestDatas = requestData.map((request) => request.getData());
+        return requestDatas;
     } catch (error) {
         console.error(error)
         return error;
