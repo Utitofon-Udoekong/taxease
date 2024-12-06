@@ -1,69 +1,110 @@
 <template>
   <div class="min-h-screen bg-white dark:bg-gray-950">
-    <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-900 shadow-lg dark:shadow-gray-900/50">
-      <div class="flex flex-col h-full">
-        <!-- Logo -->
-        <div class="flex items-center justify-center h-16 px-4 bg-indigo-600 dark:bg-indigo-700">
-          <h1 class="text-xl font-bold text-white">TaxEase</h1>
-        </div>
+    <!-- Top Navbar -->
+    <nav class="fixed top-0 z-30 w-full bg-white dark:bg-gray-900 shadow-sm dark:shadow-gray-900/50">
+      <div class="px-4 sm:px-6 lg:px-8">
+        <div class="flex h-16 items-center justify-between">
+          <!-- Logo and Mobile Menu Button -->
+          <div class="flex items-center">
+            <button
+              @click="isSidebarOpen = !isSidebarOpen"
+              class="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500 lg:hidden"
+            >
+              <Icon 
+                :name="isSidebarOpen ? 'heroicons:x-mark' : 'heroicons:bars-3'" 
+                class="h-6 w-6"
+              />
+            </button>
+            <div class="flex items-center lg:hidden ml-2">
+              <h1 class="text-xl font-bold text-gray-900 dark:text-white">TaxEase</h1>
+            </div>
+          </div>
 
-        <!-- Navigation -->
-        <nav class="flex-1 px-4 py-6 space-y-1">
-          <NuxtLink
-            v-for="item in navigation"
-            :key="item.name"
-            :to="item.to"
-            class="flex items-center px-4 py-2 text-sm font-medium rounded-lg dark:text-white"
-            :exact-active-class="'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'"
-          >
-            <Icon :name="item.icon" class="size-5 mr-3" />
-            {{ item.name }}
-          </NuxtLink>
-        </nav>
+          <!-- Desktop Navigation -->
+          <div class="hidden lg:flex lg:items-center lg:space-x-6">
+            <NuxtLink
+              v-for="item in navigation"
+              :key="item.name"
+              :to="item.to"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-lg dark:text-white"
+              :exact-active-class="'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'"
+            >
+              <Icon :name="item.icon" class="h-5 w-5 mr-2" />
+              {{ item.name }}
+            </NuxtLink>
+          </div>
 
-        <!-- User Profile -->
-        <div class="p-4 border-t border-gray-200 dark:border-gray-800">
-          <!-- <WalletConnect /> -->
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <div class="pl-64">
-      <!-- Top Header -->
-      <header class="bg-white dark:bg-gray-900 shadow-sm dark:shadow-gray-900/50">
-        <div class="flex items-center justify-between h-16 px-8">
-          <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
-            {{ pageTitle }}
-          </h2>
+          <!-- Right side actions -->
           <div class="flex items-center space-x-4">
             <ThemeSwitch />
             <button
               @click="toggleNotifications"
               class="rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <Icon name="heroicons:bell" class="size-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
-              <span class="sr-only">Notifications</span>
+              <Icon name="heroicons:bell" class="h-5 w-5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300" />
             </button>
           </div>
         </div>
-      </header>
+      </div>
+    </nav>
 
+    <!-- Mobile Sidebar -->
+    <div
+      v-if="isSidebarOpen"
+      class="fixed inset-0 z-20 lg:hidden"
+      @click="isSidebarOpen = false"
+    >
+      <div class="fixed inset-0 bg-black/50"></div>
+      <div class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-900 shadow-lg overflow-y-auto">
+        <div class="flex flex-col h-full">
+          <!-- Logo -->
+          <div class="flex items-center justify-center h-16 px-4 bg-indigo-600 dark:bg-indigo-700">
+            <h1 class="text-xl font-bold text-white">TaxEase</h1>
+          </div>
+
+          <!-- Mobile Navigation -->
+          <nav class="flex-1 px-4 py-6 space-y-1">
+            <NuxtLink
+              v-for="item in navigation"
+              :key="item.name"
+              :to="item.to"
+              class="flex items-center px-4 py-2 text-sm font-medium rounded-lg dark:text-white"
+              :exact-active-class="'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400'"
+              @click="isSidebarOpen = false"
+            >
+              <Icon :name="item.icon" class="h-5 w-5 mr-3" />
+              {{ item.name }}
+            </NuxtLink>
+          </nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="pt-16">
       <!-- Page Content -->
-      <main class="p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
-        <slot />
+      <main class="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen">
+        <div class="max-w-7xl mx-auto">
+          <!-- Page Title -->
+          <div class="mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-200">
+              {{ pageTitle }}
+            </h2>
+          </div>
+
+          <slot />
+        </div>
       </main>
     </div>
 
     <!-- Notifications Panel -->
     <div
       v-if="showNotifications"
-      class="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
+      class="fixed inset-0 z-40 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-75 transition-opacity"
       @click="toggleNotifications"
     >
       <div
-        class="fixed inset-y-0 right-0 w-96 bg-white dark:bg-gray-800 shadow-xl"
+        class="fixed inset-y-0 right-0 w-full max-w-sm bg-white dark:bg-gray-800 shadow-xl"
         @click.stop
       >
         <div class="p-6">
@@ -89,6 +130,8 @@
 </template>
 
 <script setup lang="ts">
+// Add mobile menu state
+const isSidebarOpen = ref(false);
 
 interface NavigationItem {
     name: string;

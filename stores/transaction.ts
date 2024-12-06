@@ -17,6 +17,7 @@ export const useTransactionStore = defineStore('transactions', () => {
         }
       });
       transactions.value = (response as ServerResponseTransaction[]).map(normalizeTransaction);
+      console.log(transactions.value);
     } catch (error) {
       console.error('Error fetching transactions:', error);
       throw error;

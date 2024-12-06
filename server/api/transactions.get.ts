@@ -12,15 +12,11 @@ export default defineEventHandler(async (event) => {
             type: Types.Identity.TYPE.ETHEREUM_ADDRESS,
             value: identityAddress,
         });
-        console.log('meta', requestData[0].getData().meta)
-        console.log('currencyInfo', requestData[0].getData().currencyInfo)
-        console.log('currency', requestData[0].getData().currency)
-        console.log('state', requestData[0].getData().state)
+    
         const requestDatas: ServerTransaction[] = requestData.map((request) => {
             const data = request.getData();
             return normalizeServerTransaction(data)
         });
-        // console.log(requestDatas[0]);
         return requestDatas;
     } catch (error) {
         console.error(error)

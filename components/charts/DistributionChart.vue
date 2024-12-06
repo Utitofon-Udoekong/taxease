@@ -30,7 +30,7 @@
             </span>
           </div>
           <span class="text-sm font-medium text-gray-900 dark:text-white">
-            {{ formatValue(item.value) }}
+            ${{ item.value }}
           </span>
         </div>
       </div>
@@ -41,19 +41,17 @@
 <script setup lang="ts">
 interface DataItem {
   label: string;
-  value: number;
+  value: string;
 }
 
 interface Props {
   title: string;
   data: DataItem[];
   loading?: boolean;
-  valueFormatter?: (value: number) => string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  loading: false,
-  valueFormatter: (value: number) => value.toString()
+  loading: false
 });
 
 const chartColors = [
@@ -85,5 +83,4 @@ const chartOptions = {
   cutout: '70%'
 };
 
-const formatValue = (value: number) => props.valueFormatter(value);
 </script> 

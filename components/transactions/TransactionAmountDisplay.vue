@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { formatUnits } from 'viem';
+import { cleanCurrencyName } from '@/utils/currency';
 
 interface Props {
   amount: string;
@@ -29,7 +30,7 @@ const formattedAmount = computed(() => {
   const numValue = parseFloat(value);
   const formatted = Math.abs(numValue).toFixed(4);
   const sign = props.showSign && numValue > 0 && props.category !== 'expense' ? '+' : '';
-  return `${sign}${formatted} ${props.currency}`;
+  return `${sign}${formatted} ${cleanCurrencyName(props.currency)}`;
 });
 
 const amountClass = computed(() => {

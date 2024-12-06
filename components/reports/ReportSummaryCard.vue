@@ -19,7 +19,7 @@
       <!-- Main Value -->
       <div class="text-3xl font-semibold "
         :class="[
-          (parseFloat(mainValue) > 0) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+          title === 'Net Income' ? (parseFloat(mainValue) > 0) ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
         ]"
       >
         {{ mainValue }}

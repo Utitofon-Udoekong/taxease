@@ -8,7 +8,10 @@
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Generate Tax Report</h3>
       <ReportGenerationForm
-        v-model="reportConfig"
+        v-model:startDate="startDate"
+        v-model:endDate="endDate"
+        v-model:format="format"
+        @preview="handlePreview"
         @generate="generateReport"
       />
     </div>
@@ -90,32 +93,29 @@
         </template>
       </DataTable>
     </div>
+
+    <!-- Preview Modal -->
+    <ReportPreviewModal
+      v-if="showPreview"
+      :start-date="new Date(startDate)"
+      :end-date="new Date(endDate)"
+      :transactions="filteredTransactions"
+      :summary="summary"
+      @close="showPreview = false"
+      @generate="generateReport"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 
 // State
-const reportConfig = ref({
-  startDate: new Date(new Date().getFullYear(), 0, 1),
-  endDate: new Date(),
-  format: 'csv'
-});
+const startDate = ref(new Date(new Date().getFullYear(), 0, 1));
+const endDate = ref(new Date(new Date().getFullYear(), 11, 31));
+const format = ref('csv');
 
 // Data fetching
 const { transactions, loading } = storeToRefs(useTransactionStore());
-
-// onMounted(async () => {
-//   try {
-//     const data = await fetchTransaction();
-//     console.log(data);
-//     transactions.value = data as ClientTransaction[];
-//   } catch (error) {
-//     console.error('Error fetching transactions:', error);
-//   } finally {
-//     loading.value = false;
-//   }
-// });
 
 // Table configuration
 const columns = [
@@ -128,7 +128,7 @@ const columns = [
 // Data fetching and processing
 const { generateStandardReport } = useStandardTaxCalculator();
 
-const report = computed(() => generateStandardReport());
+const report = computed(() => generateStandardReport(new Date(startDate.value), new Date(endDate.value)));
 const summary = computed(() => report.value.summary);
 
 const monthlyChartData = computed(() => ({
@@ -139,20 +139,64 @@ const monthlyChartData = computed(() => ({
 const categoryChartData = computed(() => 
   Object.entries(report.value.categoryTotals).map(([label, value]) => ({
     label,
-    value: Number(value)
+    value: formatEthers(Number(value))
   }))
 );
 
 const filteredTransactions = computed(() => 
-  report.value.transactions.filter(tx => 
-    new Date(tx.timestamp).getTime() >= reportConfig.value.startDate.getTime() &&
-    new Date(tx.timestamp).getTime() <= reportConfig.value.endDate.getTime()
+  transactions.value.filter(tx => 
+    new Date(tx.timestamp * 1000).getTime() >= startDate.value.getTime() &&
+    new Date(tx.timestamp * 1000).getTime() <= endDate.value.getTime()
   )
 );
 
 // Actions
 const generateReport = async () => {
-  // Implementation
+  try {
+    const report = generateStandardReport(new Date(startDate.value), new Date(endDate.value));
+    const exporter = exportFormats.find(f => f.id === format.value);
+    if (!exporter) throw new Error('Export format not found');
+    
+    const output = exporter.generate(report);
+    downloadFile(output, `tax-report${exporter.extension}`, format.value);
+  } catch (error) {
+    console.error('Error generating report:', error);
+  }
+};
+
+const handlePreview = () => {
+  if (!startDate.value || !endDate.value) {
+    console.error('Start and end date are required');
+    return;
+  }
+  showPreview.value = true;
+};
+
+watch(startDate, (newVal) => {
+  console.log('startDate changed:', newVal);
+});
+
+watch(endDate, (newVal) => {
+  console.log('endDate changed:', newVal);
+});
+
+const downloadFile = (data: string | Blob, filename: string, format: string) => {
+  const blob = data instanceof Blob ? data : new Blob([data], {
+    type: format === 'csv' 
+      ? 'text/csv' 
+      : format === 'xlsx'
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/pdf'
+  });
+  
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
 };
 
 // Helpers
@@ -172,4 +216,7 @@ const calculateTaxEstimate = () => {
   const taxableIncome = Number(summary.value.totalIncome) - Number(summary.value.totalDeductible);
   return (taxableIncome * 0.3).toString(); // Simple 30% tax rate for example
 };
+
+// Add state for preview modal
+const showPreview = ref(false);
 </script> 

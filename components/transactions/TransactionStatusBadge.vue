@@ -12,7 +12,6 @@
 </template>
 
 <script setup lang="ts">
-import type { TransactionStatus } from '@/utils/transaction';
 
 interface Props {
   status: TransactionStatus;
@@ -21,11 +20,11 @@ interface Props {
 const props = defineProps<Props>();
 
 const statusVariant = computed(() => {
-  const variants: Record<TransactionStatus, 'warning' | 'success' | 'error' | 'default'> = {
-    pending: 'warning',
-    accepted: 'success',
-    rejected: 'error',
-    canceled: 'default'
+  const variants: Record<TransactionStatus, "pending" | "accepted" | "canceled" | "created"> = {
+    pending: 'pending',
+    accepted: 'accepted',
+    canceled: 'canceled',
+    created: 'created'
   };
   return variants[props.status];
 });
@@ -34,8 +33,8 @@ const statusIcon = computed(() => {
   const icons: Record<TransactionStatus, string> = {
     pending: 'heroicons:clock',
     accepted: 'heroicons:check-circle',
-    rejected: 'heroicons:x-circle',
-    canceled: 'heroicons:no-symbol'
+    canceled: 'heroicons:no-symbol',
+    created: 'heroicons:plus-circle'
   };
   return icons[props.status];
 });

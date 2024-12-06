@@ -27,7 +27,7 @@ export interface ServerResponseTransaction {
     timestamp: number;
     amount: string;
     currency: string;
-    status: TransactionStatus;
+    status: string;
     from: string;
     to: string;
     nonce: number;
@@ -59,7 +59,7 @@ export function normalizeTransaction(serverTx: any): ClientTransaction {
         timestamp: serverTx.timestamp || Date.now(),
         amount: serverTx.amount,
         currency: serverTx.currency || 'ETH',
-        status: mapRequestStatus(serverTx.status),
+        status: serverTx.status,
         category: determineCategory(serverTx.to),
         from: serverTx.from || '',
         to: serverTx.to || '',
@@ -69,16 +69,6 @@ export function normalizeTransaction(serverTx: any): ClientTransaction {
         taxYear: serverTx.taxYear,
         deductible: false
     };
-}
-
-export function mapRequestStatus(status: string): TransactionStatus {
-    switch (status) {
-        case 'PENDING': return 'pending';
-        case 'ACCEPTED': return 'accepted';
-        case 'CANCELED': return 'canceled';
-        case 'CREATED': return 'created';
-        default: return 'pending';
-    }
 }
 
 export function determineCategory(to: string): TransactionCategory {

@@ -1,5 +1,3 @@
-import { formatUnits } from 'viem';
-import { storeToRefs } from 'pinia';
 
 interface TaxSummary {
     totalIncome: string;
@@ -7,21 +5,10 @@ interface TaxSummary {
     netIncome: string;
     totalDeductible: string;
 }
-const formattedAmount = (amount: number) => {
-    const value = formatUnits(BigInt(amount), 18);
-    const numValue = parseFloat(value);
-    // const formatted = Math.abs(numValue).toFixed(4);
-    return numValue.toFixed(2);
-};
 
 export const useStandardTaxCalculator = () => {
     const transactionStore = useTransactionStore();
     const { transactions } = storeToRefs(transactionStore);
-    const selectedPeriod = ref<{ start: Date; end: Date }>({
-        start: new Date(new Date().getFullYear(), 0, 1),
-        end: new Date(new Date().getFullYear(), 11, 31)
-    });
-
     const calculateTaxSummary = (year: number): TaxSummary => {
         const yearStart = new Date(year, 0, 1).getTime() / 1000;
         const yearEnd = new Date(year, 11, 31).getTime() / 1000;
@@ -33,29 +20,28 @@ export const useStandardTaxCalculator = () => {
         const income = yearTransactions
             .filter(tx => tx.category === 'income')
             .reduce((sum, tx) => sum + Number(tx.amount), 0);
-        console.log('income', formattedAmount(income));
+        console.log('income', formatEthers(income));
 
         const expenses = yearTransactions
             .filter(tx => tx.category === 'expense')
             .reduce((sum, tx) => sum + Number(tx.amount), 0);
-        console.log('expenses', formattedAmount(expenses));
+        console.log('expenses', formatEthers(expenses));
 
         const deductible = yearTransactions
             .filter(tx => tx.deductible)
             .reduce((sum, tx) => sum + Number(tx.amount), 0);
 
         return {
-            totalIncome: formattedAmount(income),
-            totalExpenses: formattedAmount(expenses),
-            netIncome: formattedAmount(income - expenses),
-            totalDeductible: formattedAmount(deductible)
+            totalIncome: formatEthers(income),
+            totalExpenses: formatEthers(expenses),
+            netIncome: formatEthers(income - expenses),
+            totalDeductible: formatEthers(deductible)
         };
     };
 
-    const generateStandardReport = (): StandardTaxReport => {
-        const { start, end } = selectedPeriod.value;
-        const startTime = start.getTime() / 1000;
-        const endTime = end.getTime() / 1000;
+    const generateStandardReport = (startDate: Date, endDate: Date): StandardTaxReport => {
+        const startTime = startDate.getTime() / 1000;
+        const endTime = endDate.getTime() / 1000;
 
         const periodTransactions = transactions.value.filter(tx =>
             tx.timestamp >= startTime && tx.timestamp <= endTime
@@ -77,10 +63,10 @@ export const useStandardTaxCalculator = () => {
 
             return {
                 month,
-                year: start.getFullYear(),
-                income: formattedAmount(income),
-                expenses: formattedAmount(expenses),
-                net: formattedAmount(income - expenses)
+                year: startDate.getFullYear(),
+                income: formatEthers(income),
+                expenses: formatEthers(expenses),
+                net: formatEthers(income - expenses)
             };
         });
 
@@ -91,11 +77,11 @@ export const useStandardTaxCalculator = () => {
             return acc;
         }, {} as Record<string, number>);
 
-        const summary = calculateTaxSummary(start.getFullYear());
+        const summary = calculateTaxSummary(startDate.getFullYear());
 
         return {
-            periodStart: start,
-            periodEnd: end,
+            periodStart: startDate,
+            periodEnd: endDate,
             summary,
             transactions: periodTransactions,
             categoryTotals: Object.fromEntries(

@@ -7,7 +7,7 @@ export interface ServerTransaction {
     timestamp: number;
     amount: string;
     currency: string;
-    status: ServerTransactionStatus;
+    status: string;
     from: string;
     to: string;
     nonce: number;
@@ -25,21 +25,22 @@ export function normalizeServerTransaction(rawTx: Types.IRequestDataWithEvents):
         transactionHash: rawTx.meta?.transactionManagerMeta?.dataAccessMeta?.storageMeta?.[0]?.ethereum?.transactionHash,
         timestamp: rawTx.timestamp || Date.now(),
         amount: rawTx.expectedAmount.valueOf().toString(),
-        currency: rawTx.currency || 'ETH',
-        status: mapServerRequestStatus(rawTx.state),
+        currency: cleanCurrencyName(rawTx.currency),
+        status: rawTx.state,
         from: rawTx.payer?.value || '',
         to: rawTx.payee?.value || '',
         contentData: rawTx.contentData,
         taxYear: new Date(rawTx.timestamp * 1000).getFullYear(),
     };
 }
- 
-function mapServerRequestStatus(status: Types.RequestLogic.STATE): ServerTransactionStatus {
-    switch (status) {
-        case Types.RequestLogic.STATE.PENDING: return 'pending';
-        case Types.RequestLogic.STATE.ACCEPTED: return 'accepted';
-        case Types.RequestLogic.STATE.CANCELED: return 'canceled';
-        case Types.RequestLogic.STATE.CREATED: return 'created';
-        default: return 'pending';
-    }
-}
+
+const cleanCurrencyName = (currency: string): string => {
+    // Handle null/undefined
+    if (!currency) return 'ETH';
+    
+    // Remove network tags and clean up
+    return currency
+      .split('-')[0]  // Take first part before any dash
+      .split('_')[0]  // Take first part before any underscore
+      .replace(/[^a-zA-Z]/g, ''); // Remove any non-letter characters
+  };
