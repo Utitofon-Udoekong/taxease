@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+import inject from '@rollup/plugin-inject'
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
@@ -14,7 +14,10 @@ export default defineNuxtConfig({
     'nuxt-headlessui',
     '@nuxt/icon',
     'nuxt-security',
-    '@pinia-plugin-persistedstate/nuxt'
+    '@pinia-plugin-persistedstate/nuxt',
+  ],
+  plugins: [
+    '~/plugins/wagmi'
   ],
   runtimeConfig: {
     public: {
@@ -45,7 +48,8 @@ export default defineNuxtConfig({
       global: 'globalThis',
     },
   },
-  // alias: {
-  //   'string_decoder': 'string_decoder/',
-  // },
+  alias: {
+    'string_decoder': 'string_decoder/',
+  },
+  
 })

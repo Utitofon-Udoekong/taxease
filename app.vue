@@ -4,10 +4,13 @@
   </NuxtLayout>
 </template>
 <script setup>
+const walletStore = useWalletStore();
 const transactionStore = useTransactionStore();
 const { fetchTransactions } = transactionStore;
 
 onMounted(async () => {
-  await fetchTransactions();
+  if (walletStore.address) {
+    await fetchTransactions();
+  }
 });
 </script>

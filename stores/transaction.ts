@@ -1,19 +1,18 @@
-import { defineStore } from 'pinia';
 
 export const useTransactionStore = defineStore('transactions', () => {
   const transactions = ref<ClientTransaction[]>([]);
   const loading = ref(false);
-  const walletStore = useWalletStore();
+  // const walletStore = useWalletStore();
 
   const fetchTransactions = async () => {
     if (import.meta.server) return;
-    if (!walletStore.address) return;
+    // if (!'0x519145B771a6e450461af89980e5C17Ff6Fd8A92') return;
     
     try {
       loading.value = true;
       const response = await $fetch('/api/transactions', {
         params: {
-          address: walletStore.address
+          address: '0x519145B771a6e450461af89980e5C17Ff6Fd8A92'
         }
       });
       transactions.value = (response as ServerResponseTransaction[]).map(normalizeTransaction);
@@ -26,7 +25,7 @@ export const useTransactionStore = defineStore('transactions', () => {
   };
 
   // Watch for wallet changes
-  watch(() => walletStore.address, (newAddress) => {
+  watch(() => '0x519145B771a6e450461af89980e5C17Ff6Fd8A92', (newAddress) => {
     if (newAddress) {
       fetchTransactions();
     } else {

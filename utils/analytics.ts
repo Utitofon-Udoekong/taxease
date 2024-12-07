@@ -1,10 +1,8 @@
-import type { Transaction } from './transaction';
-
 export interface AnalyticsMetric {
   id: string;
   name: string;
   description?: string;
-  calculation: (txs: Transaction[]) => number;
+  calculation: (txs: ClientTransaction[]) => number;
   format: (value: number) => string;
   trend?: (current: number, previous: number) => {
     direction: 'up' | 'down' | 'neutral';
@@ -91,7 +89,7 @@ export const metrics: AnalyticsMetric[] = [
 ];
 
 export const calculateMetrics = (
-  transactions: Transaction[],
+  transactions: ClientTransaction[],
   metricIds?: string[]
 ) => {
   const metricsToCalculate = metricIds 
@@ -108,8 +106,8 @@ export const calculateMetrics = (
 };
 
 export const calculateTrends = (
-  current: Transaction[],
-  previous: Transaction[],
+  current: ClientTransaction[],
+  previous: ClientTransaction[],
   metricIds?: string[]
 ) => {
   const metricsToCalculate = metricIds 

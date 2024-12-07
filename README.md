@@ -70,7 +70,7 @@ Cryptocurrency users face several challenges when it comes to tax reporting:
 ## Getting Started
 1. Clone the repository 
 ```bash
-git clone https://github.com/yourusername/taxease.git
+git clone https://github.com/Utitofon-Udoekong/taxease.git
 ```
 2. Install dependencies
 ```bash

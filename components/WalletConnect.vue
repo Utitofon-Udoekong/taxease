@@ -1,142 +1,143 @@
 <template>
-  <div class="wallet-container relative">
-    <!-- Connect button -->
-    <button 
-      v-if="!isConnected" 
-      @click="handleConnect"
-      class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white py-2 px-4 rounded-md font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 w-full"
+  <!-- Not Connected State -->
+  <div v-if="!isConnected">
+    <button
+      @click="showConnectors = true"
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg 
+             text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
     >
+      <Icon name="heroicons:wallet" class="w-5 h-5" />
       Connect Wallet
     </button>
 
-    <!-- Connected state with dropdown -->
-    <Menu as="div" class="relative inline-block text-left w-full" v-else>
-      <MenuButton
-        class="bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white flex items-center justify-between px-4 py-2 rounded-md font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 w-full"
-      >
-        <div class="flex items-center gap-2">
-          <NuxtImg 
-            :src="getNetworkIcon" 
-            :alt="networkData.chainId?.toString()"
-            class="w-4 h-4 rounded-full"
-          />
-          <span class="font-mono">{{ truncateAddress }}</span>
-        </div>
-        <ChevronUpIcon class="h-4 w-4" />
-      </MenuButton>
+    <!-- Connector Selection Modal -->
+    <Dialog :open="true" @close="showConnectors = false" class="relative z-50">
+      <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
+      
+      <div class="fixed inset-0 flex items-center justify-center p-4">
+        <DialogPanel class="w-full max-w-sm rounded-lg bg-white dark:bg-gray-800 p-6">
+          <DialogTitle class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+            Connect Wallet
+          </DialogTitle>
 
+          <div class="space-y-2">
+            <button
+              v-for="connector in connectors"
+              :key="connector.id"
+              @click="connectWallet(connector)"
+              class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 
+                     dark:hover:bg-gray-700 transition-colors"
+            >
+              <span class="font-medium text-gray-900 dark:text-white">{{ connector.name }}</span>
+              <Icon name="heroicons:arrow-right" class="w-5 h-5 text-gray-400" />
+            </button>
+          </div>
+
+          <div v-if="error" class="mt-4 text-sm text-red-600 dark:text-red-400">
+            {{ error.message }}
+          </div>
+        </DialogPanel>
+      </div>
+    </Dialog>
+  </div>
+
+  <!-- Connected State -->
+  <Menu as="div" class="relative" v-else>
+    <MenuButton
+      class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg 
+             text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+    >
+      <span>{{ truncatedAddress }}</span>
+      <Icon name="heroicons:chevron-down" class="w-4 h-4" aria-hidden="true" />
+    </MenuButton>
+
+    <transition
+      enter-active-class="transition duration-100 ease-out"
+      enter-from-class="transform scale-95 opacity-0"
+      enter-to-class="transform scale-100 opacity-100"
+      leave-active-class="transition duration-75 ease-in"
+      leave-from-class="transform scale-100 opacity-100"
+      leave-to-class="transform scale-95 opacity-0"
+    >
       <MenuItems
-        class="absolute bottom-full left-0 right-0 mb-2 w-full origin-bottom rounded-md bg-white dark:bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none border border-gray-200 dark:border-gray-700"
+        class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 
+               ring-black ring-opacity-5 divide-y divide-gray-100 dark:divide-gray-700"
       >
+        <div class="p-3">
+          <div class="text-sm text-gray-500 dark:text-gray-400">Balance</div>
+          <div class="font-medium text-gray-900 dark:text-white">
+            {{ formattedBalance }} ETH
+          </div>
+        </div>
         <div class="py-1">
-          <!-- Account Details -->
           <MenuItem v-slot="{ active }">
             <button
-              @click="openAccountModal"
+              @click="disconnectWallet"
               :class="[
                 active ? 'bg-gray-100 dark:bg-gray-700' : '',
-                'flex w-full items-center px-4 py-2 text-sm text-gray-900 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white'
+                'w-full flex items-center px-4 py-2 text-sm text-red-600'
               ]"
             >
-              <UserCircleIcon class="mr-3 h-5 w-5" />
-              Account Details
-            </button>
-          </MenuItem>
-
-          <!-- Network Switcher -->
-          <MenuItem v-slot="{ active }">
-            <button
-              @click="openNetworkModal"
-              :class="[
-                active ? 'bg-gray-100 dark:bg-gray-700' : '',
-                'flex w-full items-center px-4 py-2 text-sm text-gray-900 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white'
-              ]"
-            >
-              <ArrowsRightLeftIcon class="mr-3 h-5 w-5" />
-              Switch Network
-            </button>
-          </MenuItem>
-
-          <div class="border-t border-gray-200 dark:border-gray-700"></div>
-
-          <!-- Disconnect -->
-          <MenuItem v-slot="{ active }">
-            <button
-              @click="handleDisconnect"
-              :class="[
-                active ? 'bg-gray-100 dark:bg-gray-700 text-red-400 dark:text-red-500' : 'text-red-500 dark:text-red-400',
-                'flex w-full items-center px-4 py-2 text-sm hover:text-red-400 dark:hover:text-red-500'
-              ]"
-            >
-              <ArrowLeftIcon class="mr-3 h-5 w-5" />
+              <Icon name="heroicons:power" class="w-4 h-4 mr-2" />
               Disconnect
             </button>
           </MenuItem>
         </div>
       </MenuItems>
-    </Menu>
-  </div>
+    </transition>
+  </Menu>
 </template>
 
 <script setup lang="ts">
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
-import { 
-  UserCircleIcon, 
-  ArrowsRightLeftIcon,
-  ArrowLeftIcon,
-  ChevronUpIcon
-} from '@heroicons/vue/24/outline';
-import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue'
-import { sepolia, type AppKitNetwork } from '@reown/appkit/networks'
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-// import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue';
-// import { sepolia, type AppKitNetwork } from '@reown/appkit/networks';
-// import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';  
-// import { reconnect } from '@wagmi/core'
-// import type { Address } from 'viem';
+import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import { useChainId, useConnect, useDisconnect, useAccount, useBalance } from '@wagmi/vue';
 
-const config = useRuntimeConfig();
-const projectId = config.public.walletConnectProjectId;
-const wallet = useWalletStore();
+const chainId = useChainId();
+const { connect, connectors, error, status } = useConnect();
+const { disconnect } = useDisconnect();
+const { address, isConnected } = useAccount();
+const { data: balance } = useBalance({ address });
+const walletStore = useWalletStore();
 
-// // Create metadata object
-const metadata = {
-  name: 'TaxEase',
-  description: 'Crypto Tax Reporting Made Easy',
-  url: 'http://localhost:3000',
-  icons: ['https://avatars.githubusercontent.com/u/179229932']
-};
-
-const networks: [AppKitNetwork, ...AppKitNetwork[]] = [sepolia];
-
-const wagmiAdapter = new WagmiAdapter({
-  networks,
-  projectId: projectId as string,
+// Watch for address changes
+watch(address, (newAddress) => {
+  walletStore.setAddress(newAddress ?? null);
 });
 
-const modal = createAppKit({
-  adapters: [wagmiAdapter],
-  networks,
-  projectId,
-  metadata,
-  features: {
-    analytics: true
+// Watch for chain changes
+watch(chainId, (newChainId) => {
+  walletStore.setChainId(newChainId);
+});
+
+const showConnectors = ref(false);
+
+const truncatedAddress = computed(() => {
+  return walletStore.truncatedAddress;
+});
+
+const formattedBalance = computed(() => {
+  if (!balance.value) return '0.00';
+  return (+balance.value.formatted).toFixed(4);
+});
+
+const connectWallet = (connector: any) => {
+  connect({ connector, chainId: chainId.value });
+  showConnectors.value = false;
+};
+
+const disconnectWallet = () => {
+  disconnect();
+  walletStore.reset();
+};
+
+// Close modal on successful connection
+watchEffect(() => {
+  if (isConnected.value) {
+    showConnectors.value = false;
   }
-})
+});
 
-const { open } = useAppKit()
-const appKitAccount = useAppKitAccount()
-const networkData = useAppKitNetwork()
-const { disconnect } = useDisconnect()
-const isConnected = computed(() => appKitAccount.value.isConnected)
-const address = computed(() => appKitAccount.value.address ?? '')
-
-const handleConnect = () => {
-  open({ view: 'Connect' })
-}
-
-const handleDisconnect = async () => {
-  await disconnect()
-}
-
+onMounted(() => {
+  showConnectors.value = true;
+});
 </script>

@@ -16,8 +16,12 @@
               />
             </button>
             <div class="flex items-center lg:hidden ml-2">
-              <h1 class="text-xl font-bold text-gray-900 dark:text-white">TaxEase</h1>
+              <Logo />
             </div>
+          </div>
+
+          <div class="hidden lg:flex lg:items-center lg:space-x-6">
+            <Logo />
           </div>
 
           <!-- Desktop Navigation -->
