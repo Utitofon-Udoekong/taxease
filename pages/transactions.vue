@@ -7,11 +7,10 @@
     <!-- Header with Refresh -->
     <div class="flex justify-between items-center">
       <h2 class="text-xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h2>
-      <button @click="fetchData" class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md
-               text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700" :disabled="loading">
-        <Icon name="heroicons:arrow-path" class="w-5 h-5" :class="{ 'animate-spin': loading }" />
-        Refresh
-      </button>
+      <RefreshButton 
+        :loading="loading" 
+        @refresh="fetchData"
+      />
     </div>
     <DataTable
       :data="transactions"

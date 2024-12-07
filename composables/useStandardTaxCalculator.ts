@@ -20,12 +20,10 @@ export const useStandardTaxCalculator = () => {
         const income = yearTransactions
             .filter(tx => tx.category === 'income')
             .reduce((sum, tx) => sum + Number(tx.amount), 0);
-        console.log('income', formatEthers(income));
 
         const expenses = yearTransactions
             .filter(tx => tx.category === 'expense')
             .reduce((sum, tx) => sum + Number(tx.amount), 0);
-        console.log('expenses', formatEthers(expenses));
 
         const deductible = yearTransactions
             .filter(tx => tx.deductible)
@@ -39,7 +37,10 @@ export const useStandardTaxCalculator = () => {
         };
     };
 
-    const generateStandardReport = (startDate: Date, endDate: Date): StandardTaxReport => {
+    const defaultStartDate = ref(new Date(new Date().getFullYear(), 0, 1));
+    const defaultEndDate = ref(new Date(new Date().getFullYear(), 11, 31));
+
+    const generateStandardReport = (startDate: Date = defaultStartDate.value, endDate: Date = defaultEndDate.value): StandardTaxReport => {
         const startTime = startDate.getTime() / 1000;
         const endTime = endDate.getTime() / 1000;
 

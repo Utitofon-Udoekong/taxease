@@ -5,7 +5,7 @@
       <div class="flex items-center space-x-4">
         <div class="relative">
           <img
-            :src="profileImage || '/default-avatar.png'"
+            :src="profileImage || 'https://robohash.org/L2F.png?set=set1'"
             alt="Profile"
             class="h-16 w-16 rounded-full object-cover"
           />

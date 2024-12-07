@@ -27,8 +27,10 @@
       </div>
       <div class="p-6">
         <TaxSettings
-          v-model="taxSettings"
-          @save="saveTaxSettings"
+          v-model:defaultCurrency="taxSettings.defaultCurrency"
+          v-model:reportingPeriod="taxSettings.reportingPeriod"
+          v-model:categories="taxSettings.categories"
+          @save="() => saveTaxSettings(taxSettings)"
         />
       </div>
     </div>
@@ -69,6 +71,8 @@
           <!-- Connect New Wallet -->
           <button
             @click="connect"
+            disabled
+            title="Coming soon"
             class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 dark:border-gray-700 
                    rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 
                    bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -102,21 +106,8 @@
 <script setup lang="ts">
 // import { useDisconnect } from '@wagmi/core';
 // Profile settings
-const profileSettings = ref({
-  name: '',
-  email: '',
-  notifications: {
-    email: true,
-    push: false
-  }
-});
-
-// Tax settings
-const taxSettings = ref({
-  defaultCurrency: 'USD',
-  reportingPeriod: 'monthly',
-  categories: [] as string[]
-});
+const settingsStore = useSettingsStore();
+const { profileSettings, taxSettings } = storeToRefs(settingsStore);
 
 // API keys
 const apiKeys = ref([]);
@@ -129,13 +120,20 @@ const connectedAddress = computed(() => wallet.address);
 
 // Actions
 const saveProfile = async (settings: typeof profileSettings.value) => {
-  // Implementation
+  settingsStore.updateProfileSettings(settings);
 };
 
-const saveTaxSettings = async (settings: typeof taxSettings.value) => {
-  // Implementation
+type TaxSettings = {
+  defaultCurrency: string;
+  reportingPeriod: 'monthly' | 'quarterly' | 'yearly';
+  categories: string[];
+}
+
+const saveTaxSettings = async (settings: TaxSettings) => {
+  settingsStore.updateTaxSettings(settings);
 };
 
+///TODO: Implement API key generation and revocation
 const generateApiKey = async (name: string) => {
   // Implementation
 };

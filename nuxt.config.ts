@@ -13,6 +13,8 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     'nuxt-headlessui',
     '@nuxt/icon',
+    'nuxt-security',
+    '@pinia-plugin-persistedstate/nuxt'
   ],
   runtimeConfig: {
     public: {

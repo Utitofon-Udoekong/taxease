@@ -6,8 +6,8 @@
         Default Currency
       </label>
       <select
-        v-model="localSettings.defaultCurrency"
-        class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 
+        v-model="defaultCurrency"
+        class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white
                bg-white dark:bg-gray-800 px-3 py-2"
       >
         <option value="USD">USD - US Dollar</option>
@@ -23,8 +23,8 @@
         Default Reporting Period
       </label>
       <select
-        v-model="localSettings.reportingPeriod"
-        class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 
+        v-model="reportingPeriod"
+        class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white
                bg-white dark:bg-gray-800 px-3 py-2"
       >
         <option value="monthly">Monthly</option>
@@ -40,14 +40,14 @@
       </label>
       <div class="space-y-2">
         <div
-          v-for="(category, index) in localCategories"
+          v-for="(category, index) in categories"
           :key="index"
           class="flex items-center gap-2"
         >
           <input
             type="text"
-            v-model="localCategories[index]"
-            class="flex-1 rounded-md border border-gray-300 dark:border-gray-700 
+            v-model="categories[index]"
+            class="flex-1 rounded-md border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white
                    bg-white dark:bg-gray-800 px-3 py-2"
           />
           <button
@@ -81,41 +81,25 @@
 </template>
 
 <script setup lang="ts">
-interface TaxSettings {
-  defaultCurrency: string;
-  reportingPeriod: string;
-  categories: string[];
-}
-
-const props = defineProps<{
-  modelValue: TaxSettings;
-}>();
+const defaultCurrency = defineModel<string>('defaultCurrency');
+const reportingPeriod = defineModel<'monthly' | 'quarterly' | 'yearly'>('reportingPeriod');
+const categories = defineModel<string[]>('categories',{default: []});
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: TaxSettings): void;
-  (e: 'save', value: TaxSettings): void;
+  (e: 'save'): void;
 }>();
 
-const localSettings = computed({
-  get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
-});
-
-const localCategories = ref(props.modelValue.categories);
-
 const addCategory = () => {
-  localCategories.value.push('');
+  categories.value = [...categories.value, ''];
 };
 
 const removeCategory = (index: number) => {
-  localCategories.value.splice(index, 1);
+  categories.value = categories.value.filter((_, i) => i !== index);
 };
 
 const handleSubmit = () => {
-  const settings = {
-    ...localSettings.value,
-    categories: localCategories.value.filter(Boolean)
-  };
-  emit('save', settings);
+  // Filter out empty categories before saving
+  categories.value = categories.value.filter(Boolean);
+  emit('save');
 };
 </script> 

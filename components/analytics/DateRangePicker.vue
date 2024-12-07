@@ -3,43 +3,35 @@
     <div class="flex items-center gap-2">
       <input
         type="date"
-        v-model="localStart"
-        class="rounded-md border border-gray-300 dark:border-gray-700 
+        v-model="start"
+        class="rounded-md border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white
                bg-white dark:bg-gray-800 px-3 py-2"
       />
       <span class="text-gray-500 dark:text-gray-400">to</span>
       <input
         type="date"
-        v-model="localEnd"
-        class="rounded-md border border-gray-300 dark:border-gray-700 
+        v-model="end"
+        class="rounded-md border border-gray-300 dark:border-gray-700 text-gray-900 dark:text-white
                bg-white dark:bg-gray-800 px-3 py-2"
       />
     </div>
-    <div class="flex items-center gap-2">
+    <!-- <div class="flex items-center gap-2">
       <button
         v-for="preset in presets"
         :key="preset.label"
         @click="applyPreset(preset)"
-        class="px-3 py-1 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700"
-        :class="currentPreset === preset.label ? 'bg-gray-100 dark:bg-gray-700' : ''"
+        class="px-3 py-1 text-sm rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400"
+        :class="currentPreset === preset.label ? 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white' : ''"
       >
         {{ preset.label }}
       </button>
-    </div>
+    </div> -->
   </div>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  modelValue: {
-    start: Date;
-    end: Date;
-  };
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: { start: Date; end: Date }): void;
-}>();
+const start = defineModel<Date>('start');
+const end = defineModel<Date>('end');
 
 const presets = [
   { label: 'This Month', days: 30 },
@@ -49,28 +41,11 @@ const presets = [
 
 const currentPreset = ref('');
 
-const localStart = computed({
-  get: () => props.modelValue.start.toISOString().split('T')[0],
-  set: (value) => emit('update:modelValue', {
-    start: new Date(value),
-    end: props.modelValue.end
-  })
-});
-
-const localEnd = computed({
-  get: () => props.modelValue.end.toISOString().split('T')[0],
-  set: (value) => emit('update:modelValue', {
-    start: props.modelValue.start,
-    end: new Date(value)
-  })
-});
-
 const applyPreset = (preset: { label: string; days: number }) => {
   currentPreset.value = preset.label;
-  const end = new Date();
-  const start = new Date();
-  start.setDate(end.getDate() - preset.days);
-  
-  emit('update:modelValue', { start, end });
+  end.value = new Date();
+  const newStart = new Date();
+  newStart.setDate(end.value.getDate() - preset.days);
+  start.value = newStart;
 };
 </script> 

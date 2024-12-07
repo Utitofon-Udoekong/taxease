@@ -4,7 +4,7 @@
       <h3 class="text-lg font-medium text-gray-900 dark:text-white">
         {{ title }}
       </h3>
-      <div class="flex items-center gap-2">
+      <!-- <div class="flex items-center gap-2">
         <button
           v-for="period in periods"
           :key="period.value"
@@ -18,7 +18,7 @@
         >
           {{ period.label }}
         </button>
-      </div>
+      </div> -->
     </div>
 
     <Chart

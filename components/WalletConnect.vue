@@ -89,6 +89,7 @@ import {
 import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue';
 import { sepolia, type AppKitNetwork } from '@reown/appkit/networks';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { reconnect } from '@wagmi/core'
 import type { Address } from 'viem';
 
 const config = useRuntimeConfig();
@@ -107,7 +108,8 @@ const networks: [AppKitNetwork, ...AppKitNetwork[]] = [sepolia];
 // Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
   networks,
-  projectId: projectId as string
+  projectId: projectId as string,
+  ssr: true
 });
 
 // Create modal
@@ -170,14 +172,6 @@ const truncateAddress = computed(() => wallet.truncatedAddress);
 const getNetworkIcon = computed(() => wallet.networkIcon);
 const isConnected = computed(() => wallet.isConnected);
 
-// Network icons mapping
-const networkIcons = {
-  1: 'https://cryptologos.cc/logos/ethereum-eth-logo.png?v=002',
-  137: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-  8453: 'https://raw.githubusercontent.com/base-org/brand-kit/main/logo/in-product/Base_Network_Logo.svg',
-  56: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-};
-
 // Action handlers
 const handleConnect = () => {
   open({ view: 'Connect' });
@@ -194,4 +188,10 @@ const openAccountModal = () => {
 const openNetworkModal = () => {
   open({ view: 'Networks' });
 };
+
+onMounted(() => {
+  console.log('WalletConnect mounted');
+  // wagmiAdapter.reconnect(wagmiAdapter.connectors[0]);
+  reconnect(wagmiAdapter.wagmiConfig);
+});
 </script>

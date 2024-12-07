@@ -16,6 +16,7 @@
     "@nuxt/image": "1.8.1",
     "@nuxtjs/color-mode": "3.5.2",
     "@nuxtjs/tailwindcss": "6.12.2",
+    "@pinia-plugin-persistedstate/nuxt": "^1.2.1",
     "@pinia/nuxt": "0.8.0",
     "@reown/appkit": "^1.5.3",
     "@reown/appkit-adapter-wagmi": "^1.5.3",
@@ -28,12 +29,17 @@
     "jspdf-autotable": "^3.8.4",
     "nuxt": "^3.14.1592",
     "nuxt-headlessui": "1.2.0",
+    "nuxt-security": "2.1.5",
     "pinia": "^2.2.7",
     "viem": "^2.21.53",
     "vue": "latest",
     "vue-chartjs": "^5.3.2",
     "vue-router": "latest",
+    "wagmi": "^2.13.4",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   },
-  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee",
+  "devDependencies": {
+    "@wagmi/core": "^2.15.2"
+  }
 }

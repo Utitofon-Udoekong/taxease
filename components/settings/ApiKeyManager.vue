@@ -47,6 +47,8 @@
     <!-- Generate New Key -->
     <div>
       <button
+        disabled
+        title="Coming soon"
         @click="showGenerateModal = true"
         class="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
       >
