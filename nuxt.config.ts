@@ -44,5 +44,8 @@ export default defineNuxtConfig({
     define: {
       global: 'globalThis',
     },
-  }
+  },
+  // alias: {
+  //   'string_decoder': 'string_decoder/',
+  // },
 })

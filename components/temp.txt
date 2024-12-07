@@ -68,7 +68,7 @@
                 'flex w-full items-center px-4 py-2 text-sm hover:text-red-400 dark:hover:text-red-500'
               ]"
             >
-              <ArrowLeftIcon class="mr-3 h-5 w-5" />
+              <ArrowLeftStartOnRectangleIcon class="mr-3 h-5 w-5" />
               Disconnect
             </button>
           </MenuItem>
@@ -78,28 +78,23 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue';
 import { 
   UserCircleIcon, 
   ArrowsRightLeftIcon,
-  ArrowLeftIcon,
+  ArrowLeftStartOnRectangleIcon,
   ChevronUpIcon
 } from '@heroicons/vue/24/outline';
-import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue'
-import { sepolia, type AppKitNetwork } from '@reown/appkit/networks'
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-// import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue';
-// import { sepolia, type AppKitNetwork } from '@reown/appkit/networks';
-// import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';  
-// import { reconnect } from '@wagmi/core'
-// import type { Address } from 'viem';
+import { createAppKit, useAppKit, useAppKitAccount, useAppKitNetwork, useDisconnect } from '@reown/appkit/vue';
+import { sepolia, type AppKitNetwork } from '@reown/appkit/networks';
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
+import { reconnect } from '@wagmi/core'
+import type { Address } from 'viem';
 
 const config = useRuntimeConfig();
 const projectId = config.public.walletConnectProjectId;
-const wallet = useWalletStore();
-
-// // Create metadata object
+// Create metadata object
 const metadata = {
   name: 'TaxEase',
   description: 'Crypto Tax Reporting Made Easy',
@@ -107,36 +102,96 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 };
 
+// Set networks
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [sepolia];
 
+// Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
   networks,
   projectId: projectId as string,
+  ssr: true
 });
 
+// Create modal
 const modal = createAppKit({
   adapters: [wagmiAdapter],
   networks,
-  projectId,
+  defaultNetwork: sepolia,
+  projectId: projectId as string,
   metadata,
   features: {
     analytics: true
   }
-})
+});
 
-const { open } = useAppKit()
-const appKitAccount = useAppKitAccount()
-const networkData = useAppKitNetwork()
-const { disconnect } = useDisconnect()
-const isConnected = computed(() => appKitAccount.value.isConnected)
-const address = computed(() => appKitAccount.value.address ?? '')
+// Save AppKit instance to store
 
+// Use composables
+const { open } = useAppKit();
+const appKitAccount = useAppKitAccount();
+const networkData = useAppKitNetwork();
+const { disconnect } = useDisconnect();
+
+const wallet = useWalletStore();
+wallet.setAppKitInstance(modal);
+
+// Replace the existing watchers with:
+watch(() => appKitAccount.value.isConnected, (newValue) => {
+  if (!newValue) {
+    wallet.reset();
+  }
+});
+
+watch(() => appKitAccount.value.address, (newValue) => {
+  wallet.setAddress(newValue as Address || null);
+});
+
+watch(() => networkData.value.chainId, (newValue) => {
+  wallet.setChainId(newValue as number || null);
+  
+  // Check network and prompt switch if needed
+  if (wallet.isConnected && !wallet.isCorrectNetwork) {
+    wallet.switchToSepolia();
+  }
+});
+
+// // Add balance watcher
+// const { data: balance } = useBalance({
+//   address: computed(() => wallet.address as Address),
+//   watch: true,
+// });
+
+// watch(balance, (newBalance) => {
+//   if (newBalance?.value) {
+//     wallet.setBalance(newBalance.value);
+//   }
+// });
+
+// Update the template section to use the store:
+const truncateAddress = computed(() => wallet.truncatedAddress);
+const getNetworkIcon = computed(() => wallet.networkIcon);
+const isConnected = computed(() => wallet.isConnected);
+
+// Action handlers
 const handleConnect = () => {
-  open({ view: 'Connect' })
-}
+  open({ view: 'Connect' });
+};
 
 const handleDisconnect = async () => {
-  await disconnect()
-}
+  await disconnect();
+};
 
+const openAccountModal = () => {
+  open({ view: 'Account' });
+};
+
+const openNetworkModal = () => {
+  open({ view: 'Networks' });
+};
+
+onMounted(() => {
+  console.log('WalletConnect mounted');
+  // wagmiAdapter.reconnect(wagmiAdapter.connectors[0]);
+  reconnect(wagmiAdapter.wagmiConfig);
+});
 </script>
