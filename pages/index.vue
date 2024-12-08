@@ -82,19 +82,19 @@ const quickStats = computed(() => {
     {
       title: 'Total Income',
       subtitle: 'Current Period',
-      mainValue: summary.totalIncome,
+      mainValue: summary.totalIncome + ' ETH',
       icon: 'heroicons:banknotes'
     },
     {
       title: 'Total Expenses',
       subtitle: 'Current Period',
-      mainValue: summary.totalExpenses,
+      mainValue: summary.totalExpenses + ' ETH',
       icon: 'heroicons:credit-card'
     },
     {
       title: 'Net Income',
       subtitle: 'Current Period',
-      mainValue: summary.netIncome,
+      mainValue: summary.netIncome + ' ETH',
       icon: 'heroicons:calculator'
     },
     {

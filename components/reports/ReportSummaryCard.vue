@@ -23,8 +23,21 @@
         ]"
       >
         {{ mainValue }}
-        </div>
+      </div>
 
+    </div>
+    <!-- Breakdown -->
+    <div v-if="breakdown" class="pt-4 border-t border-gray-200 dark:border-gray-700">
+        <dl class="space-y-2">
+          <div
+            v-for="(value, label) in breakdown"
+            :key="label"
+            class="flex justify-between text-sm"
+          >
+            <dt class="text-gray-500 dark:text-gray-400">{{ label }}</dt>
+            <dd class="font-medium text-gray-900 dark:text-white">{{ value }}</dd>
+          </div>
+      </dl>
     </div>
   </div>
 </template>
@@ -35,6 +48,7 @@ interface Props {
   subtitle: string;
   mainValue: string;
   icon: string;
+  breakdown?: Record<string, string>;
 }
 
 defineProps<Props>();

@@ -36,9 +36,6 @@
 
           <div v-if="error" class="mt-4 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
             {{ error.message }}
-            <button v-if="error.name === 'ConnectorAlreadyConnectedError'" @click="disconnectWallet">
-              Try again
-            </button>
           </div>
         </DialogPanel>
       </div>
@@ -93,11 +90,11 @@
 
 <script setup lang="ts">
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
-import { useChainId, useConnect, useDisconnect, useAccount, useBalance } from '@wagmi/vue';
+import { useChainId, useConnect, useDisconnect, useAccount, useBalance, useReconnect } from '@wagmi/vue';
 import { formatEther } from 'viem';
-
 const chainId = useChainId();
 const { connect, connectors, error, status } = useConnect();
+const { data: reconnectData } = useReconnect();
 const { disconnect } = useDisconnect();
 const { address, isConnected } = useAccount();
 const { data: balance } = useBalance({ address });
@@ -139,4 +136,12 @@ watchEffect(() => {
   console.log(error)
 });
 
+onMounted(() => {
+  if (reconnectData.value) {
+    console.log(reconnectData.value)
+    connect({ connector: reconnectData.value[0].connector, chainId: reconnectData.value[0].chainId });
+  }else{
+    disconnectWallet()
+  }
+})
 </script>

@@ -57,7 +57,7 @@ const metrics = computed(() => {
       id: 'average',
       name: 'Average Transaction',
       description: 'Average transaction value',
-      value: calculateAverageTransaction(),
+      value: calculateAverageTransaction() + ' ETH',
       icon: 'heroicons:calculator'
     },
     {

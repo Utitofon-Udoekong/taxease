@@ -19,15 +19,15 @@
           <dl class="mt-2 grid grid-cols-1 gap-2">
             <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
               <dt class="text-sm text-gray-600 dark:text-gray-400">Total Income</dt>
-              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.totalIncome) }}</dd>
+              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.totalIncome) }} ETH</dd>
             </div>
             <div class="flex justify-between py-2 border-b border-gray-200 dark:border-gray-700">
               <dt class="text-sm text-gray-600 dark:text-gray-400">Total Expenses</dt>
-              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.totalExpenses) }}</dd>
+              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.totalExpenses) }} ETH</dd>
             </div>
             <div class="flex justify-between py-2">
               <dt class="text-sm text-gray-600 dark:text-gray-400">Net Income</dt>
-              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.netIncome) }}</dd>
+              <dd class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(summary.netIncome) }} ETH</dd>
             </div>
           </dl>
         </div>

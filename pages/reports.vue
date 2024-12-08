@@ -21,7 +21,7 @@
       <ReportSummaryCard
         title="Total Income"
         subtitle="Current Period"
-        :main-value="formatCurrency(summary.totalIncome)"
+        :main-value="summary.totalIncome + ' ETH'"
         trend-value="+15.3%"
         trend-direction="up"
         icon="heroicons:banknotes"
@@ -29,22 +29,27 @@
       <ReportSummaryCard
         title="Total Expenses"
         subtitle="Current Period"
-        :main-value="formatCurrency(summary.totalExpenses)"
+        :main-value="summary.totalExpenses + ' ETH'"
         trend-value="-8.4%"
         trend-direction="down"
         icon="heroicons:credit-card"
+        :breakdown="{
+          'Income': summary.totalIncome + ' ETH',
+          'Expenses': summary.totalExpenses + ' ETH',
+          'Net': summary.netIncome + ' ETH'
+        }"
       />
       <ReportSummaryCard
         title="Net Income"
         subtitle="Current Period"
-        :main-value="formatCurrency(summary.netIncome)"
+        :main-value="summary.netIncome + ' ETH'"
         trend-value="+23.7%"
         trend-direction="up"
         icon="heroicons:calculator"
         :breakdown="{
-          'Taxable Income': formatCurrency(summary.totalIncome),
-          'Deductions': formatCurrency(summary.totalDeductible),
-          'Tax Estimate': formatCurrency(calculateTaxEstimate())
+          'Taxable Income': summary.totalIncome + ' ETH',
+          'Deductions': summary.totalDeductible + ' ETH',
+          'Tax Estimate': calculateTaxEstimate() + ' ETH'
         }"
       />
     </div>
@@ -69,30 +74,6 @@
       </div>
     </div>
 
-    <!-- Transaction List -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-      <div class="p-6 border-b border-gray-200 dark:border-gray-700">
-        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Transactions</h3>
-      </div>
-      <DataTable
-        :columns="columns"
-        :data="filteredTransactions"
-        :loading="loading"
-      >
-        <template #cell-date="{ value }">
-          {{ formatDate(value) }}
-        </template>
-        <template #cell-category="{ value }">
-          <TransactionCategoryBadge :category="value" />
-        </template>
-        <template #cell-amount="{ item }">
-          <TransactionAmountDisplay
-            :amount="item.amount"
-            :currency="item.currency"
-          />
-        </template>
-      </DataTable>
-    </div>
 
     <!-- Preview Modal -->
     <ReportPreviewModal
@@ -109,15 +90,13 @@
 
 <script setup lang="ts">
 
-// State
 const startDate = ref(new Date(new Date().getFullYear(), 0, 1));
 const endDate = ref(new Date(new Date().getFullYear(), 11, 31));
 const format = ref('csv');
+const showPreview = ref(false);
 
-// Data fetching
 const { transactions, loading } = storeToRefs(useTransactionStore());
 
-// Table configuration
 const columns = [
   { key: 'date', label: 'Date', sortable: true },
   { key: 'category', label: 'Category', sortable: true },
@@ -125,7 +104,6 @@ const columns = [
   { key: 'deductible', label: 'Deductible', sortable: true }
 ];
 
-// Data fetching and processing
 const { generateStandardReport } = useStandardTaxCalculator();
 
 const report = computed(() => generateStandardReport(new Date(startDate.value), new Date(endDate.value)));
@@ -145,8 +123,8 @@ const categoryChartData = computed(() =>
 
 const filteredTransactions = computed(() => 
   transactions.value.filter(tx => 
-    new Date(tx.timestamp * 1000).getTime() >= startDate.value.getTime() &&
-    new Date(tx.timestamp * 1000).getTime() <= endDate.value.getTime()
+    new Date(tx.timestamp * 1000).getTime() >= new Date(startDate.value).getTime() &&
+    new Date(tx.timestamp * 1000).getTime() <= new Date(endDate.value).getTime()
   )
 );
 
@@ -199,14 +177,6 @@ const downloadFile = (data: string | Blob, filename: string, format: string) => 
   window.URL.revokeObjectURL(url);
 };
 
-// Helpers
-const formatCurrency = (value: string) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD'
-  }).format(Number(value));
-};
-
 const formatDate = (timestamp: number) => {
   return new Date(timestamp * 1000).toLocaleDateString();
 };
@@ -217,6 +187,4 @@ const calculateTaxEstimate = () => {
   return (taxableIncome * 0.3).toString(); // Simple 30% tax rate for example
 };
 
-// Add state for preview modal
-const showPreview = ref(false);
 </script> 
