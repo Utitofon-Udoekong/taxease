@@ -1,10 +1,7 @@
-import inject from '@rollup/plugin-inject'
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
-  experimental: {
-    clientNodeCompat: true,
-  },
+
   modules: [
     '@pinia/nuxt',
     '@nuxtjs/tailwindcss',
@@ -14,10 +11,7 @@ export default defineNuxtConfig({
     'nuxt-headlessui',
     '@nuxt/icon',
     'nuxt-security',
-    '@pinia-plugin-persistedstate/nuxt',
-  ],
-  plugins: [
-    '~/plugins/wagmi'
+    '@wagmi/vue/nuxt'
   ],
   runtimeConfig: {
     public: {
@@ -48,8 +42,7 @@ export default defineNuxtConfig({
       global: 'globalThis',
     },
   },
-  alias: {
-    'string_decoder': 'string_decoder/',
-  },
-  
+  // alias: {
+  //   'string_decoder': 'string_decoder/',
+  // },
 })

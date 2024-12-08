@@ -17,7 +17,7 @@ export const useWalletStore = defineStore('wallet', () => {
 
   const networkName = computed((): string => {
     const networks: Record<number, string> = {
-      11155111: 'Sepolia',
+      [sepolia.id]: 'Sepolia',
     };
     return chainId.value ? networks[chainId.value] || 'Unknown Network' : 'Not Connected';
   });
@@ -56,6 +56,4 @@ export const useWalletStore = defineStore('wallet', () => {
     setChainId,
     reset,
   };
-}, {
-  persist: true
 }); 

@@ -1,4 +1,5 @@
 <template>
+  
   <!-- Not Connected State -->
   <div v-if="!isConnected">
     <button
@@ -11,7 +12,7 @@
     </button>
 
     <!-- Connector Selection Modal -->
-    <Dialog :open="true" @close="showConnectors = false" class="relative z-50">
+    <Dialog :open="showConnectors" @close="showConnectors = false" class="relative z-50">
       <div class="fixed inset-0 bg-black/30 backdrop-blur-sm" aria-hidden="true" />
       
       <div class="fixed inset-0 flex items-center justify-center p-4">
@@ -24,7 +25,7 @@
             <button
               v-for="connector in connectors"
               :key="connector.id"
-              @click="connectWallet(connector)"
+              @click="connect({ connector, chainId })"
               class="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-100 
                      dark:hover:bg-gray-700 transition-colors"
             >
@@ -33,15 +34,17 @@
             </button>
           </div>
 
-          <div v-if="error" class="mt-4 text-sm text-red-600 dark:text-red-400">
+          <div v-if="error" class="mt-4 text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
             {{ error.message }}
+            <button v-if="error.name === 'ConnectorAlreadyConnectedError'" @click="disconnectWallet">
+              Try again
+            </button>
           </div>
         </DialogPanel>
       </div>
     </Dialog>
   </div>
 
-  <!-- Connected State -->
   <Menu as="div" class="relative" v-else>
     <MenuButton
       class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg 
@@ -91,6 +94,7 @@
 <script setup lang="ts">
 import { Menu, MenuButton, MenuItems, MenuItem, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import { useChainId, useConnect, useDisconnect, useAccount, useBalance } from '@wagmi/vue';
+import { formatEther } from 'viem';
 
 const chainId = useChainId();
 const { connect, connectors, error, status } = useConnect();
@@ -117,13 +121,8 @@ const truncatedAddress = computed(() => {
 
 const formattedBalance = computed(() => {
   if (!balance.value) return '0.00';
-  return (+balance.value.formatted).toFixed(4);
+  return (+formatEther(balance.value.value)).toFixed(4);
 });
-
-const connectWallet = (connector: any) => {
-  connect({ connector, chainId: chainId.value });
-  showConnectors.value = false;
-};
 
 const disconnectWallet = () => {
   disconnect();
@@ -135,9 +134,9 @@ watchEffect(() => {
   if (isConnected.value) {
     showConnectors.value = false;
   }
+
+  console.log(status),
+  console.log(error)
 });
 
-onMounted(() => {
-  showConnectors.value = true;
-});
 </script>

@@ -1,10 +1,20 @@
 import { VueQueryPlugin } from '@tanstack/vue-query'
-import { WagmiPlugin } from '@wagmi/vue'
-import { defineNuxtPlugin } from 'nuxt/app'
-
-import { config } from '../wagmi'
+import { http, createConfig, WagmiPlugin } from '@wagmi/vue';
+import { sepolia } from '@wagmi/vue/chains';
+import { walletConnect } from '@wagmi/vue/connectors'
 
 // TODO: Move to @wagmi/vue/nuxt nitro plugin
 export default defineNuxtPlugin((nuxtApp) => {
-  nuxtApp.vueApp.use(WagmiPlugin, { config }).use(VueQueryPlugin, {})
+    const runtimeConfig = useRuntimeConfig()
+    const projectId = runtimeConfig.public.walletConnectProjectId;
+    const config = createConfig({
+        chains: [sepolia],
+        connectors: [walletConnect({ projectId })],
+        transports: {
+            [sepolia.id]: http(),
+        },
+    });
+
+    nuxtApp.vueApp.use(WagmiPlugin, { config })
+    nuxtApp.vueApp.use(VueQueryPlugin, {})
 })

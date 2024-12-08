@@ -2,17 +2,18 @@
 export const useTransactionStore = defineStore('transactions', () => {
   const transactions = ref<ClientTransaction[]>([]);
   const loading = ref(false);
-  // const walletStore = useWalletStore();
+  const walletStore = useWalletStore();
 
   const fetchTransactions = async () => {
     if (import.meta.server) return;
-    // if (!'0x519145B771a6e450461af89980e5C17Ff6Fd8A92') return;
+    if (!walletStore.address) return;
     
     try {
       loading.value = true;
       const response = await $fetch('/api/transactions', {
-        params: {
-          address: '0x519145B771a6e450461af89980e5C17Ff6Fd8A92'
+        method: 'POST',
+        body: {
+          address: walletStore.address
         }
       });
       transactions.value = (response as ServerResponseTransaction[]).map(normalizeTransaction);
@@ -25,7 +26,7 @@ export const useTransactionStore = defineStore('transactions', () => {
   };
 
   // Watch for wallet changes
-  watch(() => '0x519145B771a6e450461af89980e5C17Ff6Fd8A92', (newAddress) => {
+  watch(() => walletStore.address, (newAddress) => {
     if (newAddress) {
       fetchTransactions();
     } else {
